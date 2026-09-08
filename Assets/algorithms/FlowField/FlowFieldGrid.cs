@@ -9,7 +9,7 @@ public class FlowFieldGrid
     private readonly int x;
     private readonly int y;
     //网格节点字典
-    private readonly Dictionary<int, FlowFieldGridNode> grid = new Dictionary<int, FlowFieldGridNode>();
+    public readonly Dictionary<int, FlowFieldGridNode> grid = new Dictionary<int, FlowFieldGridNode>();
 
     public FlowFieldGrid(int x, int y, bool[,] map)
     {
@@ -19,11 +19,17 @@ public class FlowFieldGrid
         {
             for (int j = 0; j < y; j++)
             {
-                int index = i * x + j;//计算位置
+                int index = i * this.y + j;//计算位置,与GetNode保持一致(x*this.y + y)
                 //把节点加入字典中
                 grid.Add(index, new FlowFieldGridNode(i, j, map[i, j]));
             }
         }
+    }
+
+    public FlowFieldGridNode GetNode(int x, int y)
+    {
+        if (x < 0 || x >= this.x || y < 0 || y >= this.y) return null;
+        return grid[x * this.y + y];
     }
 
     //使用Texture2D时
@@ -42,7 +48,7 @@ public class FlowFieldGrid
         {
             for (int j = 0; j < y; j++)
             {
-                int index = i * x + j;//计算位置
+                int index = i * this.y + j;//计算位置,与GetNode保持一致(x*this.y + y)
                 //把节点加入字典中,255表示可走,其他表示不可走
                 grid.Add(index, new FlowFieldGridNode(i, j, bytes[index] == 255));
             }
@@ -53,6 +59,7 @@ public class FlowFieldGrid
     //设置目标节点,遍历相邻节点计算代价
     public void SetTarget(FlowFieldGridNode target)
     {
+        if (target == null) return;
         foreach (var node in grid.Values)
         {
             node.cost = node.isWalkable ? 10 : int.MaxValue;
@@ -121,7 +128,7 @@ public class FlowFieldGrid
     }
 
     //生成流场
-    public void GenerateFlowField(FlowFieldGridNode target)
+    public void GenerateFlowField()
     {
         foreach (var node in grid.Values)
         {
@@ -137,8 +144,8 @@ public class FlowFieldGrid
                     fcost = neighbour.fcost;
                     node.direction = new Vector3(
                         neighbour.x - node.x,
-                        0,
-                        neighbour.y - node.y
+                        neighbour.y - node.y,
+                        0
                     );
                 }
             }
